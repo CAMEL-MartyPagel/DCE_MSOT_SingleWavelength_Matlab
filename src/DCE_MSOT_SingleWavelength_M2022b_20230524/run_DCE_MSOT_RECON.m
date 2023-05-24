@@ -1,4 +1,4 @@
-function [] = run_DCE_MSOT_MSP (msot_file, saving_DIR, segm)
+function [] = run_DCE_MSOT_RECON (msot_file, saving_DIR, segm)
 
 % Add MSOT MAtlab library to path 
 % This library was created by iThera
@@ -61,11 +61,6 @@ map_no = 4;
 %[R, ~, ts, ~] = loadMSOTMsp(msot_file);
 [R, ~, ~, ts] = loadMSOTRecon(msot_file);
 msot = squeeze(R);
-
-disp(size(datainfo.ScanStructure));
-
-disp(size(R));
-disp(size(msot));
 
 % obtain the number of spectrally unmixed images 
 [d1,d2,d3,d4,d5,n_msp] = size(R);
@@ -274,19 +269,19 @@ numGroups = length(unique_clusters);
 % disp("numGroups ="); disp(numGroups);
 % disp("unique_clusters ="); disp(unique_clusters);
 
-% mean_clusters = zeros(numGroups, timepoints);
-% 
-% for ii = 1:numGroups
-%     mean_clusters(ii,:) = mean(signal(dbscan_out == unique_clusters(ii),:)); 
-% end
+mean_clusters = zeros(numGroups, timepoints);
+
+for ii = 1:numGroups
+    mean_clusters(ii,:) = mean(signal(dbscan_out == unique_clusters(ii),:)); 
+end
 
 % disp("mean_clusters ="); disp(mean_clusters);
 
 %------------------------------- Show Results----------------------------------%
-% figure(104);
-% B = arrayfun(@num2str, unique_clusters, 'UniformOutput', 0);
-% H = plot(time_min, mean_clusters', 'LineWidth',0.5); legend (B); title ("DBSCAN Clusters");
-% set(H, 'ButtonDownFcn', {@LineSelected, H})
+figure(104);
+B = arrayfun(@num2str, unique_clusters, 'UniformOutput', 0);
+H = plot(time_min, mean_clusters', 'LineWidth',0.5); legend (B); title ("DBSCAN Clusters");
+set(H, 'ButtonDownFcn', {@LineSelected, H})
 
 % figure (105);
 % hold on;
@@ -302,32 +297,32 @@ numGroups = length(unique_clusters);
 % [M, AIF_cluster_index] = max(injection_segment_range);
 % disp("AIF Cluster Index =" + unique_clusters(AIF_cluster_index));
 
-% str = input('Choose an AIF cluster: ','s');
-% AIF_cluster_index = str2num(str) + 1;
+str = input('Choose an AIF cluster: ','s');
+AIF_cluster_index = str2num(str) + 1;
 
 %------------------------------- Show Results----------------------------------%
-% figure;
-% plot(time_min, mean_clusters(AIF_cluster_index,:)); title("AIF Cluster");
+figure;
+plot(time_min, mean_clusters(AIF_cluster_index,:)); title("AIF Cluster");
 
 %------------------- Create AIF Mask ------------------------%
-% aif_voxels_index = find(dbscan_out ==  unique_clusters(AIF_cluster_index));
-% disp("aif_voxels_index ="); disp(aif_voxels_index);
-% 
-% aif_mask_dbscan = zeros(rows, cols);
-% %aif_mask_dbscan(voxel_col(aif_voxels_index),voxel_row(aif_voxels_index)) = 1;
-% 
-% for ind = 1:length(aif_voxels_index)
-%     disp(aif_voxels_index(ind) + " , " + voxel_row(aif_voxels_index(ind)) + " , " + voxel_col(aif_voxels_index(ind)));
-%     aif_mask_dbscan(voxel_row(aif_voxels_index(ind)),voxel_col(aif_voxels_index(ind))) = 1;
-% end
-% 
-% %disp(aif_mask_dbscan);
-% ref_anat = mean(I,3);
-% figure; imshowpair(ref_anat,aif_mask_dbscan, "method", "blend", "Scaling","independent"); title('Automatic AIF ROI'); set(gca, 'ydir', 'normal'); set(gca, 'xdir', 'reverse');
-% str = input('Are you satisfied with the Automatic AIF ROI? Y/N [Y]: ','s');
-% if str == 'Y'
-%     mask_aif = aif_mask_dbscan > 0;
-% else
+aif_voxels_index = find(dbscan_out ==  unique_clusters(AIF_cluster_index));
+disp("aif_voxels_index ="); disp(aif_voxels_index);
+
+aif_mask_dbscan = zeros(rows, cols);
+%aif_mask_dbscan(voxel_col(aif_voxels_index),voxel_row(aif_voxels_index)) = 1;
+
+for ind = 1:length(aif_voxels_index)
+    disp(aif_voxels_index(ind) + " , " + voxel_row(aif_voxels_index(ind)) + " , " + voxel_col(aif_voxels_index(ind)));
+    aif_mask_dbscan(voxel_row(aif_voxels_index(ind)),voxel_col(aif_voxels_index(ind))) = 1;
+end
+
+%disp(aif_mask_dbscan);
+ref_anat = mean(I,3);
+figure; imshowpair(ref_anat,aif_mask_dbscan, "method", "blend", "Scaling","independent"); title('Automatic AIF ROI'); set(gca, 'ydir', 'normal'); set(gca, 'xdir', 'reverse');
+str = input('Are you satisfied with the Automatic AIF ROI? Y/N [Y]: ','s');
+if str == 'Y'
+    mask_aif = aif_mask_dbscan > 0;
+else
     disp("Selecting Manual AIF ROI")
     %------------------- Select Manual AIF ------------------------%
     roi_approve = 0;
@@ -367,7 +362,7 @@ numGroups = length(unique_clusters);
             close([f1 f2]);
         end
     end
-% end
+end
 
 
 %------------------- Select Muscle ------------------------%
